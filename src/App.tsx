@@ -1,24 +1,47 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="widget">
+      <div className="account account-source">
+        <div className="tabs">
+          <button className="tab active">USD</button>
+          <button className="tab">EUR</button>
+          <button className="tab">GBP</button>
+        </div>
+        <div className="input-box">
+          <div className="input-box-body">
+            <span className="exchange-direction">-</span>
+            <input type="text" className="input" value="12.03" style={{ width: "5ch" }} />
+          </div>
+          <div className="input-box-footer">
+            <div className="hint">You have $23.34</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="account">
+        <div className="tabs">
+          <button className="tab active">USD</button>
+          <button className="tab">EUR</button>
+          <button className="tab">GBP</button>
+        </div>
+        <div className="input-box">
+          <div className="input-box-body">
+            <span className="exchange-direction">+</span>
+            <input type="text" className="input" value="12.03" style={{ width: "5ch" }} />
+          </div>
+          <div className="input-box-footer">
+            <div className="hint">You have $23.34</div>
+            <div className="hint">€1 = $1.23</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="widget-footer">
+        <button className="primary-btn">Exchange</button>
+      </div>
     </div>
   );
 }
