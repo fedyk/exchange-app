@@ -1,49 +1,41 @@
 import React from 'react';
+import { Provider as ReactReduxProvider } from 'react-redux';
+import { API } from './api/api';
 import './App.css';
+import Widget from './components/Widget';
+import { defaultAccounts } from './constants';
+import { Converter } from './controllers/converter';
+import { createStore, Store } from './store';
 
-function App() {
-  return (
-    <div className="widget">
-      <div className="account account-source">
-        <div className="tabs">
-          <button className="tab active">USD</button>
-          <button className="tab">EUR</button>
-          <button className="tab">GBP</button>
-        </div>
-        <div className="input-box">
-          <div className="input-box-body">
-            <span className="exchange-direction">-</span>
-            <input type="text" className="input" value="12.03" style={{ width: "5ch" }} />
-          </div>
-          <div className="input-box-footer">
-            <div className="hint">You have $23.34</div>
-          </div>
-        </div>
-      </div>
+interface Props { }
 
-      <div className="account">
-        <div className="tabs">
-          <button className="tab active">USD</button>
-          <button className="tab">EUR</button>
-          <button className="tab">GBP</button>
-        </div>
-        <div className="input-box">
-          <div className="input-box-body">
-            <span className="exchange-direction">+</span>
-            <input type="text" className="input" value="12.03" style={{ width: "5ch" }} />
-          </div>
-          <div className="input-box-footer">
-            <div className="hint">You have $23.34</div>
-            <div className="hint">€1 = $1.23</div>
-          </div>
-        </div>
-      </div>
+class App extends React.Component {
+  api: API
+  store: Store
+  converter: Converter
 
-      <div className="widget-footer">
-        <button className="primary-btn">Exchange</button>
-      </div>
-    </div>
-  );
+  constructor(props: Props) {
+    super(props)
+
+    this.api = new API()
+    this.store = createStore({
+      accounts: defaultAccounts
+    })
+
+    this.converter = new Converter(this.api, this.store)
+  }
+
+  componentDidMount() {
+    this.converter.syncRates()
+  }
+
+  render() {
+    return (
+      <ReactReduxProvider store={this.store}>
+        <Widget />
+      </ReactReduxProvider>
+    );
+  }
 }
 
 export default App;
