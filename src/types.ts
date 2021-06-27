@@ -9,3 +9,15 @@ export interface Account {
   currencySign: string
   balance: number
 }
+
+export interface Transaction {
+  id: number
+  title: string
+  from: number
+  fromCurrency: string
+  fromCurrencySign: string
+  to: number
+  toCurrency: string
+  toCurrencySign: string
+  createdAt: number
+}

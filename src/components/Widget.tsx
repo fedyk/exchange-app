@@ -1,16 +1,23 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { getRates } from '../helpers/get-rates';
-import { RootState } from '../store';
-import { Account, Fx } from '../types';
+import { RootState, setAccounts } from '../store';
+import { addTransaction } from '../store/transactions/actions';
+import { Account, Fx, Transaction } from '../types';
 import './Widget.css';
 
 interface ConnectedProps {
   fx: Fx
   accounts: Account[]
+  transactions: Transaction[]
 }
 
-interface Props extends ConnectedProps { }
+interface ConnectedDispachers {
+  onAddTransaction(transaction: Transaction): void
+  onSetAccounts(accounts: Account[]): void
+}
+
+interface Props extends ConnectedProps, ConnectedDispachers { }
 
 interface State {
   from: string
@@ -22,6 +29,8 @@ interface State {
 export class Widget extends React.Component<Props, State> {
   fromInputRef: React.RefObject<HTMLInputElement>
   toInputRef: React.RefObject<HTMLInputElement>
+  dateFormatter: Intl.DateTimeFormat
+  transactionCounter: number
 
   constructor(props: Props) {
     super(props)
@@ -44,6 +53,11 @@ export class Widget extends React.Component<Props, State> {
 
     this.fromInputRef = React.createRef()
     this.toInputRef = React.createRef()
+    this.dateFormatter = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "short",
+      timeStyle: "short",
+    })
+    this.transactionCounter = 1
   }
 
   handleFromAccountChange(account: Account) {
@@ -72,7 +86,7 @@ export class Widget extends React.Component<Props, State> {
     })
   }
 
-  handleFromChange(event: React.ChangeEvent<HTMLInputElement>) {
+  handleFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!this.isValidNumber(event.target.value)) {
       return
     }
@@ -83,7 +97,7 @@ export class Widget extends React.Component<Props, State> {
     })
   }
 
-  handleToChange(event: React.ChangeEvent<HTMLInputElement>) {
+  handleToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!this.isValidNumber(event.target.value)) {
       return
     }
@@ -91,6 +105,66 @@ export class Widget extends React.Component<Props, State> {
     this.setState({
       to: event.target.value,
       from: ""
+    })
+  }
+
+  handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !this.isExchangeDisabled) {
+      this.handleExchange()
+    }
+  }
+
+  handleExchange = () => {
+    if (!this.state.fromAccount || !this.state.toAccount || !this.props.fx) {
+      return
+    }
+
+    const from = Number(this.from.replace(",", "."))
+    const to = Number(this.to.replace(",", "."))
+
+    if (Number.isNaN(from) || Number.isNaN(to)) {
+      return
+    }
+
+    const accounts: Account[] = []
+
+    for (let i = 0; i < this.props.accounts.length; i++) {
+      const account = this.props.accounts[i];
+
+      if (account.id === this.state.fromAccount.id) {
+        accounts.push({
+          ...account,
+          balance: account.balance - from
+        })
+      }
+      else if (account.id === this.state.toAccount.id) {
+        accounts.push({
+          ...account,
+          balance: account.balance + to
+        })
+      }
+      else {
+        accounts.push(account)
+      }
+    }
+
+    this.props.onAddTransaction({
+      id: this.transactionCounter++,
+      title: `Converted from ${this.state.fromAccount.currency}`,
+      from: from,
+      fromCurrency: this.state.fromAccount.currency,
+      fromCurrencySign: this.state.fromAccount.currencySign,
+      to: to,
+      toCurrency: this.state.toAccount.currency,
+      toCurrencySign: this.state.toAccount.currencySign,
+      createdAt: Date.now(),
+    })
+
+    this.props.onSetAccounts(accounts)
+
+    this.setState({
+      from: "",
+      to: ""
     })
   }
 
@@ -103,7 +177,11 @@ export class Widget extends React.Component<Props, State> {
       return true
     }
 
-    if (value.includes(".") && /^\d+\.\d{0,2}$/.test(value)) {
+    if (value.includes(".") && /^\d+\.\d*$/.test(value)) {
+      return true
+    }
+
+    if (value.includes(",") && /^\d+,\d*$/.test(value)) {
       return true
     }
 
@@ -112,7 +190,7 @@ export class Widget extends React.Component<Props, State> {
 
   get from() {
     if (this.state.to && this.state.fromAccount && this.state.toAccount && this.props.fx) {
-      const to = Number(this.state.to)
+      const to = Number(this.state.to.replace(",", "."))
 
       if (!Number.isNaN(to)) {
         return (to / getRates(this.state.fromAccount.currency, this.state.toAccount.currency, this.props.fx)).toFixed(2)
@@ -124,7 +202,7 @@ export class Widget extends React.Component<Props, State> {
 
   get to() {
     if (this.state.from && this.state.fromAccount && this.state.toAccount && this.props.fx) {
-      const from = Number(this.state.from)
+      const from = Number(this.state.from.replace(",", "."))
 
       if (!Number.isNaN(from)) {
         return (from * getRates(this.state.fromAccount.currency, this.state.toAccount.currency, this.props.fx)).toFixed(2)
@@ -135,7 +213,7 @@ export class Widget extends React.Component<Props, State> {
   }
 
   get isExchangeDisabled() {
-    if (!this.state.fromAccount || !this.state.toAccount ||  !this.props.fx) {
+    if (!this.state.fromAccount || !this.state.toAccount || !this.props.fx) {
       return true
     }
 
@@ -153,7 +231,7 @@ export class Widget extends React.Component<Props, State> {
   }
 
   render() {
-    return (
+    return (<div className="container">
       <div className="widget">
         <div className="account">
           <div className="tabs">
@@ -170,7 +248,7 @@ export class Widget extends React.Component<Props, State> {
               {this.from && <span className="exchange-direction">-</span>}
               <div className="dynamic-input">
                 <span className="dynamic-input-space-keeper">{this.from}</span>
-                <input type="text" className="dynamic-input-control" value={this.from} onChange={event => this.handleFromChange(event)} maxLength={10} ref={this.fromInputRef} />
+                <input type="text" className="dynamic-input-control" value={this.from} onKeyDown={this.handleKeyDown} onChange={this.handleFromChange} maxLength={10} ref={this.fromInputRef} />
               </div>
             </div>
             <div className="input-box-footer">
@@ -190,7 +268,7 @@ export class Widget extends React.Component<Props, State> {
               {this.to && <span className="exchange-direction">+</span>}
               <div className="dynamic-input">
                 <span className="dynamic-input-space-keeper">{this.to}</span>
-                <input type="text" className="dynamic-input-control" value={this.to} onChange={event => this.handleToChange(event)} maxLength={10} ref={this.toInputRef} />
+                <input type="text" className="dynamic-input-control" value={this.to} onKeyDown={this.handleKeyDown} onChange={this.handleToChange} maxLength={10} ref={this.toInputRef} />
               </div>
             </div>
             <div className="input-box-footer">
@@ -201,10 +279,27 @@ export class Widget extends React.Component<Props, State> {
         </div>
 
         <div className="widget-footer">
-          <button className="primary-btn" disabled={this.isExchangeDisabled}>Exchange</button>
+          <button className="primary-btn" disabled={this.isExchangeDisabled} onClick={this.handleExchange}>Exchange</button>
         </div>
       </div>
-    );
+
+      {this.props.transactions.length > 0 &&
+        <div className="transactions">
+          {this.props.transactions.map(transaction => (
+            <div className="transaction" key={transaction.id}>
+              <div className="transaction-row">
+                <div className="transaction-primary-cell">{transaction.title}</div>
+                <div className="transaction-primary-cell">+{transaction.fromCurrencySign}{transaction.from}</div>
+              </div>
+              <div className="transaction-row">
+                <div className="transaction-secondary-cell">{this.dateFormatter.format(transaction.createdAt)}</div>
+                <div className="transaction-secondary-cell accent">-{transaction.toCurrencySign}{transaction.to}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      }
+    </div>);
   }
 
   renderRate() {
@@ -219,11 +314,22 @@ export class Widget extends React.Component<Props, State> {
 }
 
 // @ts-ignore
-const withConnect = connect<ConnectedProps>(function (state: RootState) {
+const withConnect = connect<ConnectedProps, ConnectedDispachers>(function (state: RootState) {
   return {
     fx: state.fx,
-    accounts: state.accounts
+    accounts: state.accounts,
+    transactions: state.transactions,
+  }
+}, function (dispatch) {
+  return {
+    onAddTransaction(transaction: Transaction) {
+      dispatch(addTransaction(transaction))
+    },
+    onSetAccounts(accounts: Account[]) {
+      dispatch(setAccounts(accounts))
+    }
   }
 })
 
-export default withConnect(Widget)
+// @ts-ignore
+export const ConnectedWidget: React.ComponentClass<{}> = withConnect(Widget)
