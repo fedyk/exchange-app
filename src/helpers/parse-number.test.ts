@@ -1,10 +1,12 @@
 import { parseNumber } from "./parse-number"
 
-test("parseNumber should parse string as number", () => {
-  expect(parseNumber("")).toBe(0)
-  expect(parseNumber("1")).toBe(1)
-  expect(parseNumber("1.2")).toBe(1.2)
-  expect(parseNumber("1,3")).toBe(1.3)
-  expect(parseNumber("1,3")).toBe(1.3)
-  expect(parseNumber("abc")).toBe(NaN)
+test.each([
+  ["", 0],
+  ["1", 1],
+  ["1.2", 1.2],
+  ["1,3", 1.3],
+  ["1,3", 1.3],
+  ["abc", NaN],
+])("parseNumber should parse %s as %f", (input, expected) => {
+  expect(parseNumber(input)).toBe(expected)
 })

@@ -1,10 +1,10 @@
 import * as redux from 'redux'
 import { accountsReducers } from './accounts/reducer'
-import { fxReducers } from './fx/reducer'
+import { ratesReducers } from './rates/reducer'
 import { transactionsReducers } from './transactions/reducer'
 
 const combinedReducer = redux.combineReducers({
-  fx: fxReducers,
+  rates: ratesReducers,
   accounts: accountsReducers,
   transactions: transactionsReducers,
 })

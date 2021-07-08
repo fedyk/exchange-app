@@ -8,9 +8,9 @@ test("`createStore` should create empty store", () => {
 test("`createStore` should create store with initial values", () => {
   const initialState: any = {
     accounts: 1,
-    fx: 2
+    rates: 2
   }
 
   expect(createStore(initialState).getState()).toHaveProperty("accounts", initialState.accounts)
-  expect(createStore(initialState).getState()).toHaveProperty("fx", initialState.fx)
+  expect(createStore(initialState).getState()).toHaveProperty("rates", initialState.rates)
 })

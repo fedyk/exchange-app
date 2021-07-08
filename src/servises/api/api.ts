@@ -1,18 +1,21 @@
-import { Fx } from "../types"
+import { Rates } from "../../types"
+import { APIInterface } from "./types"
 
 const defaultHttpProvider = (...args: Parameters<typeof fetch>) => {
   return fetch(...args)
 }
 
-export class API {
+export class API implements APIInterface {
   httpProvider: typeof defaultHttpProvider
 
   constructor(httpProvider = defaultHttpProvider) {
     this.httpProvider = httpProvider
   }
 
-  fetchRates(): Promise<Fx> {
-    return this.httpProvider("https://openexchangerates.org/api/latest.json?app_id=487ba03c696b415ab481a430e1f731bc&symbols=EUR,GBP")
+  fetchRates(signal?: AbortSignal): Promise<Rates> {
+    const url = "https://openexchangerates.org/api/latest.json?app_id=487ba03c696b415ab481a430e1f731bc&symbols=EUR,GBP"
+
+    return this.httpProvider(url, { signal: signal })
       .then((resp) => this.parseResponse(resp))
   }
 
@@ -25,7 +28,7 @@ export class API {
     }
   }
 
-  private parseFx(json?: any): Fx {
+  private parseFx(json?: any): Rates {
     const base = String(json?.base ?? "")
     const rates: Record<string, number> = json.rates || {}
 

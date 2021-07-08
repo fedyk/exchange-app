@@ -1,8 +1,8 @@
-import { Fx } from '../types'
+import { Rates } from '../types'
 import { getRates } from './get-rates'
 
 test('getRates should return rates for base currency', () => {
-  const fx: Fx = {
+  const fx: Rates = {
     base: 'EUR',
     rates: {
       'USD': 2,

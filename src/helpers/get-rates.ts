@@ -1,6 +1,6 @@
-import { Fx } from "../types";
+import { Rates } from "../types";
 
-export function getRates(from: string, to: string, fx: Fx) {
+export function getRates(from: string, to: string, fx: Rates) {
   const rates = Object.assign({}, fx.rates)
 
   rates[fx.base] = 1

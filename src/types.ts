@@ -1,4 +1,4 @@
-export interface Fx {
+export interface Rates {
   base: string
   rates: Record<string, number>
 }
@@ -13,7 +13,6 @@ export interface Account {
 
 export interface Transaction {
   id: number
-  title: string
   from: number
   fromPrecision: number
   fromCurrency: string

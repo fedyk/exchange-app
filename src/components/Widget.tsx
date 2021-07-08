@@ -1,4 +1,5 @@
 import React from 'react';
+import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { formatMoney } from '../helpers/format-money';
 import { getRates } from '../helpers/get-rates';
@@ -6,13 +7,15 @@ import { isNumber } from '../helpers/is-number';
 import { parseMoney } from '../helpers/parse-money';
 import { RootState, updateAccount } from '../store';
 import { addTransaction } from '../store/transactions/actions';
-import { Account, Fx, Transaction } from '../types';
+import { Account, Rates, Transaction } from '../types';
 import { DynamicInput } from './DynamicInput';
 import { Tabs } from './Tabs';
+import { createTransaction } from '../helpers/create-transaction';
+import { ConnectedTransactionsList } from './TransactionsList';
 import './Widget.css';
 
 interface ConnectedProps {
-  fx: Fx
+  rates: Rates | null
   accounts: Account[]
   transactions: Transaction[]
 }
@@ -34,8 +37,6 @@ interface State {
 export class Widget extends React.Component<Props, State> {
   fromInputRef: React.RefObject<HTMLInputElement>
   toInputRef: React.RefObject<HTMLInputElement>
-  dateFormatter: Intl.DateTimeFormat
-  transactionCounter: number
 
   constructor(props: Props) {
     super(props)
@@ -49,11 +50,6 @@ export class Widget extends React.Component<Props, State> {
 
     this.fromInputRef = React.createRef()
     this.toInputRef = React.createRef()
-    this.dateFormatter = new Intl.DateTimeFormat("en-US", {
-      dateStyle: "short",
-      timeStyle: "short",
-    })
-    this.transactionCounter = 1
   }
 
   handleFromAccountChange(fromAccountIndex: number) {
@@ -104,7 +100,7 @@ export class Widget extends React.Component<Props, State> {
     const fromAccount = this.fromAccount
     const toAccount = this.toAccount
 
-    if (!fromAccount || !toAccount || !this.props.fx) {
+    if (!fromAccount || !toAccount || !this.props.rates) {
       return
     }
 
@@ -119,19 +115,7 @@ export class Widget extends React.Component<Props, State> {
       return
     }
 
-    this.props.onAddTransaction({
-      id: this.transactionCounter++,
-      title: `Exchange ${formatMoney(from, fromAccount.precision, fromAccount.currencySign)} to ${formatMoney(to, toAccount.precision, toAccount.currencySign)}`,
-      from: from,
-      fromPrecision: fromAccount.precision,
-      fromCurrency: fromAccount.currency,
-      fromCurrencySign: fromAccount.currencySign,
-      to: to,
-      toPrecision: toAccount.precision,
-      toCurrency: toAccount.currency,
-      toCurrencySign: toAccount.currencySign,
-      createdAt: Date.now(),
-    })
+    this.props.onAddTransaction(createTransaction(from, to, fromAccount, toAccount))
 
     this.props.onUpdateAccount(fromAccount.id, {
       balance: (fromAccount.balance - from)
@@ -151,11 +135,11 @@ export class Widget extends React.Component<Props, State> {
     const fromAccount = this.fromAccount
     const toAccount = this.toAccount
 
-    if (!fromAccount || !toAccount || !this.props.fx) {
+    if (!fromAccount || !toAccount || !this.props.rates) {
       return NaN;
     }
 
-    return getRates(fromAccount.currency, toAccount.currency, this.props.fx)
+    return getRates(fromAccount.currency, toAccount.currency, this.props.rates)
   }
 
   get from() {
@@ -196,7 +180,7 @@ export class Widget extends React.Component<Props, State> {
     const fromAccount = this.fromAccount
     const toAccount = this.toAccount
 
-    if (!fromAccount || !toAccount || !this.props.fx) {
+    if (!fromAccount || !toAccount || !this.props.rates) {
       return true
     }
 
@@ -252,12 +236,12 @@ export class Widget extends React.Component<Props, State> {
             </div>
           </div>
 
-          <div className="account">            
-              <Tabs
-                items={tabItems}
-                selectedIndex={this.state.toAccountIndex}
-                onSelect={index => this.handleToAccountChange(index)}
-              />
+          <div className="account">
+            <Tabs
+              items={tabItems}
+              selectedIndex={this.state.toAccountIndex}
+              onSelect={index => this.handleToAccountChange(index)}
+            />
             <div className="input-box" onClick={() => this.toInputRef.current?.focus()}>
               <div className="input-box-body">
                 {this.to && <span className="exchange-direction">+</span>}
@@ -275,23 +259,7 @@ export class Widget extends React.Component<Props, State> {
           </div>
         </div>
 
-        {
-          this.props.transactions.length > 0 &&
-          <div className="transactions">
-            {this.props.transactions.map(t => (
-              <div className="transaction" key={t.id}>
-                <div className="transaction-row">
-                  <div className="transaction-primary-cell">{t.title}</div>
-                  <div className="transaction-primary-cell">+{formatMoney(t.from, t.fromPrecision, t.fromCurrencySign)}</div>
-                </div>
-                <div className="transaction-row">
-                  <div className="transaction-secondary-cell">{this.dateFormatter.format(t.createdAt)}</div>
-                  <div className="transaction-secondary-cell accent">-{formatMoney(t.to, t.toPrecision, t.toCurrencySign)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        }
+        <ConnectedTransactionsList />
       </div>
     );
   }
@@ -312,21 +280,19 @@ export class Widget extends React.Component<Props, State> {
   }
 }
 
-// @ts-ignore
-const withConnect = connect<ConnectedProps, ConnectedDispachers>(function (state: RootState) {
+function mapStateToProps(state: RootState): ConnectedProps {
   return {
-    fx: state.fx,
+    rates: state.rates.rates,
     accounts: state.accounts,
     transactions: state.transactions,
   }
-}, function (dispatch) {
+}
+
+// @ts-ignore
+const withConnect = connect<ConnectedProps, ConnectedDispachers>(mapStateToProps, function (dispatch) {
   return {
-    onAddTransaction(transaction: Transaction) {
-      dispatch(addTransaction(transaction))
-    },
-    onUpdateAccount(accountId: number, account: Partial<Account>) {
-      dispatch(updateAccount(accountId, account))
-    }
+    onAddTransaction: bindActionCreators(addTransaction, dispatch),
+    onUpdateAccount: bindActionCreators(updateAccount, dispatch),
   }
 })
 

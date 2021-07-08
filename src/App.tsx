@@ -1,45 +1,32 @@
 import React from 'react';
 import { Provider as ReactReduxProvider } from 'react-redux';
-import { API } from './api/api';
-import './App.css';
-import { ConnectedWidget } from './components/Widget';
-import { defaultAccounts } from './constants';
-import { Converter } from './controllers/converter';
+import { API } from './servises/api/api';
 import { createStore, Store } from './store';
+import { Rates } from './servises/rates/rates';
+import { defaultAccounts } from './constants';
+import { ConnectedWidget } from './components/Widget';
+import './App.css';
 
 interface Props { }
 
 class App extends React.Component {
   api: API
   store: Store
-  converter: Converter
+  rates: Rates
 
   constructor(props: Props) {
     super(props)
-
     this.api = new API()
-    this.store = createStore({
-      accounts: defaultAccounts,
-      transactions: [{
-        id: 0,
-        title: "converted fro USD",
-        from: 100,
-        fromPrecision: 2,
-        fromCurrency: "USD",
-        fromCurrencySign: "$",
-        to: 200,
-        toPrecision: 2,
-        toCurrency: "EUR",
-        toCurrencySign: "€",
-        createdAt: Date.now()
-      }]
-    })
-
-    this.converter = new Converter(this.api, this.store)
+    this.store = createStore({ accounts: defaultAccounts })
+    this.rates = new Rates(this.api, this.store)
   }
 
   componentDidMount() {
-    this.converter.syncRates()
+    this.rates.syncRates()
+  }
+
+  componentWillUnmount() {
+    this.rates.dispose()
   }
 
   render() {
