@@ -23,10 +23,12 @@ class App extends React.Component {
       transactions: [{
         id: 0,
         title: "converted fro USD",
-        from: 1,
+        from: 100,
+        fromPrecision: 2,
         fromCurrency: "USD",
         fromCurrencySign: "$",
-        to: 2,
+        to: 200,
+        toPrecision: 2,
         toCurrency: "EUR",
         toCurrencySign: "€",
         createdAt: Date.now()

@@ -26,38 +26,17 @@
   padding: 0 0 8px;
 }
 
-.tabs {
-  position: relative;
+.account-header {
   display: flex;
-  margin-bottom: -1px;
   flex-direction: row;
-  justify-content: flex-end;
-  box-shadow: inset 0 -1px 0 rgb(235, 237, 239);
+  align-items: center;
+  justify-content: space-between;
 }
 
-.tab {
-  position: relative;
-  display: block;
-  z-index: 1;
-  height: 48px;
-  padding: 0 16px;
-  border: none;
-  background: none;
-  font-size: 1em;
-  color: #5f6368;
-  cursor: pointer;
-  transition: color 0.12s ease-out, border 0.12s ease-out;
-  will-change: color, border;
-  border-bottom: 2px solid transparent;
-}
-
-.tab:hover {
-  color: rgb(36, 41, 46);
-  border-bottom-color: rgb(209, 213, 218);
-}
-
-.tab.active {
-  border-bottom-color: #1967d2;
+.account-title {
+  font-weight: 400;
+  padding-left: 16px;
+  text-transform: uppercase;
 }
 
 .input-box {
@@ -77,54 +56,6 @@
 .exchange-direction {
   font-size: 2rem;
   margin-right: 4px;
-}
-
-.dynamic-input {
-  position: relative;
-}
-
-.dynamic-input-space-keeper,
-.dynamic-input-control {
-  font-size: 2rem;
-  line-height: 1;
-  letter-spacing: 0;
-  text-indent: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-}
-
-.dynamic-input-space-keeper {
-  position: relative;
-  display: block;
-  opacity: 0;
-  min-width: 1ch;
-}
-
-.dynamic-input-control {
-  position: absolute;
-  width: 100%;
-  right: 0;
-  top: 0;
-  display: block;
-  border: none;
-  padding: 0;
-}
-
-.dynamic-input-control:focus {
-  outline: none;
-}
-
-.input {
-  display: block;
-  width: auto;
-  font-size: 2rem;
-  border: none;
-  min-width: 1ch;
-}
-
-.input:focus {
-  outline: none;
 }
 
 .input-box-footer {

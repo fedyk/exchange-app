@@ -1,9 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { formatMoney } from '../helpers/format-money';
 import { getRates } from '../helpers/get-rates';
-import { RootState, setAccounts } from '../store';
+import { isNumber } from '../helpers/is-number';
+import { parseMoney } from '../helpers/parse-money';
+import { RootState, updateAccount } from '../store';
 import { addTransaction } from '../store/transactions/actions';
 import { Account, Fx, Transaction } from '../types';
+import { DynamicInput } from './DynamicInput';
+import { Tabs } from './Tabs';
 import './Widget.css';
 
 interface ConnectedProps {
@@ -14,16 +19,16 @@ interface ConnectedProps {
 
 interface ConnectedDispachers {
   onAddTransaction(transaction: Transaction): void
-  onSetAccounts(accounts: Account[]): void
+  onUpdateAccount(accountId: number, account: Partial<Account>): void
 }
 
 interface Props extends ConnectedProps, ConnectedDispachers { }
 
 interface State {
-  from: string
-  fromAccount?: Account
-  to: string
-  toAccount?: Account
+  to: string,
+  from: string,
+  fromAccountIndex: number
+  toAccountIndex: number
 }
 
 export class Widget extends React.Component<Props, State> {
@@ -35,20 +40,11 @@ export class Widget extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
-    let fromAccount
-    let toAccount
-
-    // pick first account by default
-    if (props.accounts.length > 1) {
-      fromAccount = props.accounts[0]
-      toAccount = props.accounts[1]
-    }
-
     this.state = {
       to: "",
-      toAccount,
       from: "",
-      fromAccount
+      fromAccountIndex: 0,
+      toAccountIndex: 1,
     }
 
     this.fromInputRef = React.createRef()
@@ -60,107 +56,90 @@ export class Widget extends React.Component<Props, State> {
     this.transactionCounter = 1
   }
 
-  handleFromAccountChange(account: Account) {
-    let toAccount = this.state.toAccount
+  handleFromAccountChange(fromAccountIndex: number) {
+    let toAccountIndex = this.state.toAccountIndex
 
-    if (toAccount && toAccount.id === account.id) {
-      toAccount = this.state.fromAccount
+    // swap accounts
+    if (toAccountIndex === fromAccountIndex) {
+      toAccountIndex = this.state.fromAccountIndex
     }
 
-    this.setState({
-      fromAccount: account,
-      toAccount: toAccount
-    })
+    this.setState({ fromAccountIndex, toAccountIndex })
   }
 
-  handleToAccountChange(account: Account) {
-    let fromAccount = this.state.fromAccount
+  handleToAccountChange(toAccountIndex: number) {
+    let fromAccountIndex = this.state.fromAccountIndex
 
-    if (fromAccount && fromAccount.id === account.id) {
-      fromAccount = this.state.toAccount
+    // swap accounts
+    if (fromAccountIndex === toAccountIndex) {
+      fromAccountIndex = this.state.toAccountIndex
     }
 
-    this.setState({
-      toAccount: account,
-      fromAccount: fromAccount
-    })
+    this.setState({ toAccountIndex, fromAccountIndex })
   }
 
-  handleFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!this.isValidNumber(event.target.value)) {
+  handleFromChange = (from: string) => {
+    if (!isNumber(from)) {
       return
     }
 
     this.setState({
-      from: event.target.value,
+      from: from,
       to: ""
     })
   }
 
-  handleToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!this.isValidNumber(event.target.value)) {
+  handleToChange = (to: string) => {
+    if (!isNumber(to)) {
       return
     }
 
     this.setState({
-      to: event.target.value,
+      to: to,
       from: ""
     })
   }
 
-  handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" && !this.isExchangeDisabled) {
-      this.handleExchange()
-    }
-  }
-
   handleExchange = () => {
-    if (!this.state.fromAccount || !this.state.toAccount || !this.props.fx) {
+    const fromAccount = this.fromAccount
+    const toAccount = this.toAccount
+
+    if (!fromAccount || !toAccount || !this.props.fx) {
       return
     }
 
-    const from = Number(this.from.replace(",", "."))
-    const to = Number(this.to.replace(",", "."))
+    if (this.isExchangeDisabled) {
+      return
+    }
+
+    const from = parseMoney(this.from, fromAccount.precision)
+    const to = parseMoney(this.to, toAccount.precision)
 
     if (Number.isNaN(from) || Number.isNaN(to)) {
       return
     }
 
-    const accounts: Account[] = []
-
-    for (let i = 0; i < this.props.accounts.length; i++) {
-      const account = this.props.accounts[i];
-
-      if (account.id === this.state.fromAccount.id) {
-        accounts.push({
-          ...account,
-          balance: account.balance - from
-        })
-      }
-      else if (account.id === this.state.toAccount.id) {
-        accounts.push({
-          ...account,
-          balance: account.balance + to
-        })
-      }
-      else {
-        accounts.push(account)
-      }
-    }
-
     this.props.onAddTransaction({
       id: this.transactionCounter++,
-      title: `Converted from ${this.state.fromAccount.currency}`,
+      title: `Exchange ${formatMoney(from, fromAccount.precision, fromAccount.currencySign)} to ${formatMoney(to, toAccount.precision, toAccount.currencySign)}`,
       from: from,
-      fromCurrency: this.state.fromAccount.currency,
-      fromCurrencySign: this.state.fromAccount.currencySign,
+      fromPrecision: fromAccount.precision,
+      fromCurrency: fromAccount.currency,
+      fromCurrencySign: fromAccount.currencySign,
       to: to,
-      toCurrency: this.state.toAccount.currency,
-      toCurrencySign: this.state.toAccount.currencySign,
+      toPrecision: toAccount.precision,
+      toCurrency: toAccount.currency,
+      toCurrencySign: toAccount.currencySign,
       createdAt: Date.now(),
     })
 
-    this.props.onSetAccounts(accounts)
+    this.props.onUpdateAccount(fromAccount.id, {
+      balance: (fromAccount.balance - from)
+    })
+
+    this.props.onUpdateAccount(toAccount.id, {
+      balance: toAccount.balance + to
+    })
 
     this.setState({
       from: "",
@@ -168,32 +147,28 @@ export class Widget extends React.Component<Props, State> {
     })
   }
 
-  isValidNumber(value: string) {
-    if (value.length === 0) {
-      return true
+  get rates() {
+    const fromAccount = this.fromAccount
+    const toAccount = this.toAccount
+
+    if (!fromAccount || !toAccount || !this.props.fx) {
+      return NaN;
     }
 
-    if (/^\d+$/.test(value)) {
-      return true
-    }
-
-    if (value.includes(".") && /^\d+\.\d*$/.test(value)) {
-      return true
-    }
-
-    if (value.includes(",") && /^\d+,\d*$/.test(value)) {
-      return true
-    }
-
-    return false
+    return getRates(fromAccount.currency, toAccount.currency, this.props.fx)
   }
 
   get from() {
-    if (this.state.to && this.state.fromAccount && this.state.toAccount && this.props.fx) {
-      const to = Number(this.state.to.replace(",", "."))
+    const fromAccount = this.fromAccount
+    const toAccount = this.toAccount
+    const rates = this.rates
+
+    if (this.state.to && fromAccount && toAccount && !Number.isNaN(rates)) {
+      const to = parseMoney(this.state.to, toAccount.precision)
+      const factor = Math.pow(10, fromAccount.precision)
 
       if (!Number.isNaN(to)) {
-        return (to / getRates(this.state.fromAccount.currency, this.state.toAccount.currency, this.props.fx)).toFixed(2)
+        return `${Math.floor(to / rates) / factor}`
       }
     }
 
@@ -201,11 +176,16 @@ export class Widget extends React.Component<Props, State> {
   }
 
   get to() {
-    if (this.state.from && this.state.fromAccount && this.state.toAccount && this.props.fx) {
-      const from = Number(this.state.from.replace(",", "."))
+    const fromAccount = this.fromAccount
+    const toAccount = this.toAccount
+    const rates = this.rates
+
+    if (this.state.from && fromAccount && toAccount && !Number.isNaN(rates)) {
+      const from = parseMoney(this.state.from, fromAccount.precision)
+      const factor = Math.pow(10, toAccount.precision)
 
       if (!Number.isNaN(from)) {
-        return (from * getRates(this.state.fromAccount.currency, this.state.toAccount.currency, this.props.fx)).toFixed(2)
+        return `${Math.floor(from * rates) / factor}`
       }
     }
 
@@ -213,103 +193,122 @@ export class Widget extends React.Component<Props, State> {
   }
 
   get isExchangeDisabled() {
-    if (!this.state.fromAccount || !this.state.toAccount || !this.props.fx) {
+    const fromAccount = this.fromAccount
+    const toAccount = this.toAccount
+
+    if (!fromAccount || !toAccount || !this.props.fx) {
       return true
     }
 
-    const from = Number(this.from || 0)
+    const from = parseMoney(this.from, fromAccount.precision)
 
     if (Number.isNaN(from) || from === 0) {
       return true
     }
 
-    if (this.state.fromAccount.balance < from) {
+    if (fromAccount.balance < from) {
       return true
     }
 
     return false
   }
 
+  get fromAccount() {
+    return this.props.accounts[this.state.fromAccountIndex]
+  }
+
+  get toAccount() {
+    return this.props.accounts[this.state.toAccountIndex]
+  }
+
   render() {
-    return (<div className="container">
-      <div className="widget">
-        <div className="account">
-          <div className="tabs">
-            {this.props.accounts.map(account => (
-              <button
-                key={account.id}
-                className={`tab ${account.id === this.state.fromAccount?.id ? "active" : ""}`}
-                onClick={() => this.handleFromAccountChange(account)}
-              >{account.currency}</button>
-            ))}
-          </div>
-          <div className="input-box" onClick={() => this.fromInputRef.current?.focus()}>
-            <div className="input-box-body">
-              {this.from && <span className="exchange-direction">-</span>}
-              <div className="dynamic-input">
-                <span className="dynamic-input-space-keeper">{this.from}</span>
-                <input type="text" className="dynamic-input-control" value={this.from} onKeyDown={this.handleKeyDown} onChange={this.handleFromChange} maxLength={10} ref={this.fromInputRef} />
+    const tabItems = this.props.accounts.map(account => account.currency)
+
+    return (
+      <div className="container">
+        <div className="widget">
+          <div className="account">
+            <div className="account-header">
+              <div className="account-title">Convert</div>
+              <Tabs
+                items={tabItems}
+                selectedIndex={this.state.fromAccountIndex}
+                onSelect={index => this.handleFromAccountChange(index)}
+              />
+            </div>
+            <div className="input-box" onClick={() => this.fromInputRef.current?.focus()}>
+              <div className="input-box-body">
+                {this.from && <span className="exchange-direction">-</span>}
+                <DynamicInput
+                  value={this.from}
+                  onChange={this.handleFromChange}
+                  onEnterKeyDown={this.handleExchange}
+                  inputRef={this.fromInputRef} autoFocus
+                />
+              </div>
+              <div className="input-box-footer">
+                <div className="hint">{this.fromAccount ? `You have ${formatMoney(this.fromAccount.balance, this.fromAccount.precision, this.fromAccount.currencySign)}` : ""}</div>
               </div>
             </div>
-            <div className="input-box-footer">
-              <div className="hint">{this.state.fromAccount ? `You have ${this.state.fromAccount.currencySign}${this.state.fromAccount.balance}` : ""}</div>
+          </div>
+
+          <div className="account">            
+              <Tabs
+                items={tabItems}
+                selectedIndex={this.state.toAccountIndex}
+                onSelect={index => this.handleToAccountChange(index)}
+              />
+            <div className="input-box" onClick={() => this.toInputRef.current?.focus()}>
+              <div className="input-box-body">
+                {this.to && <span className="exchange-direction">+</span>}
+                <DynamicInput value={this.to} onChange={this.handleToChange} onEnterKeyDown={this.handleExchange} inputRef={this.toInputRef} />
+              </div>
+              <div className="input-box-footer">
+                <div className="hint">{this.toAccount ? `You have ${formatMoney(this.toAccount.balance, this.toAccount.precision, this.toAccount.currencySign)}` : ""}</div>
+                <div className="hint">{this.renderRate()}</div>
+              </div>
             </div>
+          </div>
+
+          <div className="widget-footer">
+            <button className="primary-btn" disabled={this.isExchangeDisabled} onClick={this.handleExchange}>Exchange</button>
           </div>
         </div>
 
-        <div className="account">
-          <div className="tabs">
-            {this.props.accounts.map(account => (
-              <button key={account.currency} className={`tab ${account.id === this.state.toAccount?.id ? "active" : ""}`} onClick={() => this.handleToAccountChange(account)}>{account.currency}</button>
+        {
+          this.props.transactions.length > 0 &&
+          <div className="transactions">
+            {this.props.transactions.map(t => (
+              <div className="transaction" key={t.id}>
+                <div className="transaction-row">
+                  <div className="transaction-primary-cell">{t.title}</div>
+                  <div className="transaction-primary-cell">+{formatMoney(t.from, t.fromPrecision, t.fromCurrencySign)}</div>
+                </div>
+                <div className="transaction-row">
+                  <div className="transaction-secondary-cell">{this.dateFormatter.format(t.createdAt)}</div>
+                  <div className="transaction-secondary-cell accent">-{formatMoney(t.to, t.toPrecision, t.toCurrencySign)}</div>
+                </div>
+              </div>
             ))}
           </div>
-          <div className="input-box" onClick={() => this.toInputRef.current?.focus()}>
-            <div className="input-box-body">
-              {this.to && <span className="exchange-direction">+</span>}
-              <div className="dynamic-input">
-                <span className="dynamic-input-space-keeper">{this.to}</span>
-                <input type="text" className="dynamic-input-control" value={this.to} onKeyDown={this.handleKeyDown} onChange={this.handleToChange} maxLength={10} ref={this.toInputRef} />
-              </div>
-            </div>
-            <div className="input-box-footer">
-              <div className="hint">{this.state.toAccount ? `You have ${this.state.toAccount.currencySign}${this.state.toAccount.balance}` : ""}</div>
-              <div className="hint">{this.renderRate()}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="widget-footer">
-          <button className="primary-btn" disabled={this.isExchangeDisabled} onClick={this.handleExchange}>Exchange</button>
-        </div>
+        }
       </div>
-
-      {this.props.transactions.length > 0 &&
-        <div className="transactions">
-          {this.props.transactions.map(transaction => (
-            <div className="transaction" key={transaction.id}>
-              <div className="transaction-row">
-                <div className="transaction-primary-cell">{transaction.title}</div>
-                <div className="transaction-primary-cell">+{transaction.fromCurrencySign}{transaction.from}</div>
-              </div>
-              <div className="transaction-row">
-                <div className="transaction-secondary-cell">{this.dateFormatter.format(transaction.createdAt)}</div>
-                <div className="transaction-secondary-cell accent">-{transaction.toCurrencySign}{transaction.to}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      }
-    </div>);
+    );
   }
 
   renderRate() {
-    if (!this.state.fromAccount || !this.state.toAccount || !this.props.fx) {
-      return ""
+    const fromAccount = this.fromAccount
+    const toAccount = this.toAccount
+    const rates = this.rates
+
+    if (!fromAccount || !toAccount || Number.isNaN(rates)) {
+      return null
     }
 
-    const rates = getRates(this.state.fromAccount.currency, this.state.toAccount.currency, this.props.fx)
+    const from = formatMoney(Math.pow(10, fromAccount.precision), fromAccount.precision, fromAccount.currencySign)
+    const to = formatMoney(Math.floor(Math.pow(10, toAccount.precision) * rates), toAccount.precision, toAccount.currencySign)
 
-    return `${this.state.fromAccount.currencySign}1 = ${this.state.toAccount.currencySign}${rates.toFixed(2)}`
+    return `${from} = ${to}`
   }
 }
 
@@ -325,8 +324,8 @@ const withConnect = connect<ConnectedProps, ConnectedDispachers>(function (state
     onAddTransaction(transaction: Transaction) {
       dispatch(addTransaction(transaction))
     },
-    onSetAccounts(accounts: Account[]) {
-      dispatch(setAccounts(accounts))
+    onUpdateAccount(accountId: number, account: Partial<Account>) {
+      dispatch(updateAccount(accountId, account))
     }
   }
 })

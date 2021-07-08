@@ -8,15 +8,18 @@ export interface Account {
   currency: string
   currencySign: string
   balance: number
+  precision: number
 }
 
 export interface Transaction {
   id: number
   title: string
   from: number
+  fromPrecision: number
   fromCurrency: string
   fromCurrencySign: string
   to: number
+  toPrecision: number
   toCurrency: string
   toCurrencySign: string
   createdAt: number

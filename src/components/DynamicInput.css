@@ -1,0 +1,35 @@
+.dynamic-input {
+  position: relative;
+}
+
+.dynamic-input-space-keeper,
+.dynamic-input-control {
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+}
+
+.dynamic-input-space-keeper {
+  position: relative;
+  display: block;
+  opacity: 0;
+  min-width: 1ch;
+}
+
+.dynamic-input-control {
+  position: absolute;
+  width: 100%;
+  right: 0;
+  top: 0;
+  display: block;
+  border: none;
+  padding: 0;
+}
+
+.dynamic-input-control:focus {
+  outline: none;
+}

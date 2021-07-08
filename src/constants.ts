@@ -5,18 +5,21 @@ export const defaultAccounts: Account[] = [
     id: 1,
     currency: "USD",
     currencySign: "$",
-    balance: 2045.54,
+    balance: 204554,
+    precision: 2
   },
   {
     id: 2,
     currency: "EUR",
     currencySign: "€",
-    balance: 250.00,
+    balance: 25000,
+    precision: 2
   },
   {
     id: 3,
     currency: "GBP",
     currencySign: "£",
-    balance: 58.33,
+    balance: 5833,
+    precision: 2
   }
 ]
