@@ -1,9 +1,7 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import { Transaction } from '../types';
-import { formatMoney } from '../helpers/format-money';
-import './TransactionsList.css'
-import { RootState } from '../store';
+import React from "react";
+import { Transaction } from "../types";
+import { formatMoney } from "../helpers/format-money";
+import "./TransactionsList.css"
 
 interface Props {
   transactions: Transaction[]
@@ -36,11 +34,3 @@ export function TransactionsList(props: Props) {
       </div>
     )
 }
-
-const withConnect = connect<Props, {}, {}, RootState>(function (state) {
-  return {
-    transactions: state.transactions
-  }
-})
-
-export const ConnectedTransactionsList = withConnect(TransactionsList)

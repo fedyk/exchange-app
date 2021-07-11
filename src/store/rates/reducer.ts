@@ -1,4 +1,4 @@
-import { ActionTypes, RatesState, Status, SET_RATES, SET_RATES_STATUS } from './types'
+import { ActionTypes, RatesState, Status, SET_RATES, SET_RATES_STATUS } from "./types"
 
 const initialState: RatesState = {
   rates: null,

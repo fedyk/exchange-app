@@ -1,5 +1,5 @@
 import { Rates } from "../../types";
 
-export interface APIInterface {
+export interface IOpenExchangeRates {
   fetchRates(signal?: AbortSignal): Promise<Rates>
 }

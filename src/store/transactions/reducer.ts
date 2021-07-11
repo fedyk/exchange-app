@@ -1,4 +1,4 @@
-import { ActionTypes, TransactionsState, ADD_TRANSACTION } from './types'
+import { ActionTypes, TransactionsState, ADD_TRANSACTION } from "./types"
 
 const initialState: TransactionsState = []
 

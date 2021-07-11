@@ -1,11 +1,11 @@
-import { APIInterface } from "../api/types"
+import { IOpenExchangeRates } from "../open-exchange-rates/types"
 import { createStore, Store } from "../../store"
 import { Status } from "../../store/rates/types"
 import { Rates as IRates } from "../../types"
-import { Rates } from "./rates"
+import { RatesSync } from "./rates-sync"
 
 let ratesData: IRates
-let api: APIInterface
+let api: IOpenExchangeRates
 let store: Store
 
 beforeEach(() => {
@@ -22,16 +22,16 @@ beforeEach(() => {
 })
 
 test("Rates should initialize", () => {
-  const rates = new Rates(api, store)
+  const rates = new RatesSync(api, store)
 
-  expect(rates).toBeInstanceOf(Rates)
+  expect(rates).toBeInstanceOf(RatesSync)
 
-  rates.dispose()
+  rates.stopSync()
 })
 
 test("Rates should sync data in store", async () => {
-  const rates = new Rates(api, store)
-  const promise = rates.syncRates()
+  const rates = new RatesSync(api, store)
+  const promise = rates.startSync()
 
   expect(store.getState()).toHaveProperty("rates.rates", null)
   expect(store.getState()).toHaveProperty("rates.status", Status.Syncing)
@@ -41,6 +41,6 @@ test("Rates should sync data in store", async () => {
   expect(store.getState()).toHaveProperty("rates.rates", ratesData)
   expect(store.getState()).toHaveProperty("rates.status", Status.UpToDate)
 
-  rates.dispose()
+  rates.stopSync()
 })
 

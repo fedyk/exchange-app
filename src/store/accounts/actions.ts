@@ -1,5 +1,5 @@
-import { Account } from '../../types'
-import { ActionTypes, SET_ACCOUNTS, UPDATE_ACCOUNT } from './types'
+import { Account } from "../../types"
+import { ActionTypes, SET_ACCOUNTS, UPDATE_ACCOUNT } from "./types"
 
 export function setAccounts(accounts: Account[]): ActionTypes {
   return {

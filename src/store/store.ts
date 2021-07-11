@@ -1,7 +1,7 @@
-import * as redux from 'redux'
-import { accountsReducers } from './accounts/reducer'
-import { ratesReducers } from './rates/reducer'
-import { transactionsReducers } from './transactions/reducer'
+import * as redux from "redux"
+import { accountsReducers } from "./accounts/reducer"
+import { ratesReducers } from "./rates/reducer"
+import { transactionsReducers } from "./transactions/reducer"
 
 const combinedReducer = redux.combineReducers({
   rates: ratesReducers,

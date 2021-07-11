@@ -1,5 +1,5 @@
-import { Transaction } from '../../types'
-import { ActionTypes, ADD_TRANSACTION } from './types'
+import { Transaction } from "../../types"
+import { ActionTypes, ADD_TRANSACTION } from "./types"
 
 export function addTransaction(transaction: Transaction): ActionTypes {
   return {

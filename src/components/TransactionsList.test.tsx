@@ -1,12 +1,12 @@
-import React from 'react';
-import { render } from '@testing-library/react';
-import { TransactionsList } from './TransactionsList';
+import React from "react";
+import { render } from "@testing-library/react";
+import { TransactionsList } from "./TransactionsList";
 
-test('TransactionsList should render', () => {
+test("TransactionsList should render", () => {
   render(<TransactionsList transactions={[]} />)
 })
 
-test('TransactionsList should render one transaction', () => {
+test("TransactionsList should render one transaction", () => {
   render(<TransactionsList transactions={[{
     id: 0,
     from: 100,

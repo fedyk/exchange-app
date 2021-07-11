@@ -1,5 +1,5 @@
-import React from 'react';
-import './DynamicInput.css';
+import React from "react";
+import "./DynamicInput.css";
 
 interface Props {
   value: string

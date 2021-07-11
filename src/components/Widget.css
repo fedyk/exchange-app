@@ -6,7 +6,7 @@
 
 .widget {
   position: relative;
-  box-shadow: 0 1px 4px 0 rgb(0 0 0 / 25%);
+  box-shadow: 0 1px 4px 0 rgb(0 0 0 / 15%);
   margin-bottom: 16px;
 }
 
@@ -34,9 +34,9 @@
 }
 
 .account-title {
-  font-weight: 400;
+  font-weight: 600;
   padding-left: 16px;
-  text-transform: uppercase;
+  color: #5f6368;
 }
 
 .input-box {
@@ -102,4 +102,18 @@
   color: rgba(0, 0, 0, 0.37);
   box-shadow: 0 0 0 0 rgb(0 0 0 / 20%), 0 0 0 0 rgb(0 0 0 / 14%),
     0 0 0 0 rgb(0 0 0 / 12%);
+}
+
+.current-rates {
+  display: flex;
+  align-items: center;
+}
+
+.current-rates .icon {
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.current-rates-icon {
+  line-height: 0;
 }

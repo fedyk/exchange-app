@@ -1,21 +1,24 @@
-import React from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { formatMoney } from '../helpers/format-money';
-import { getRates } from '../helpers/get-rates';
-import { isNumber } from '../helpers/is-number';
-import { parseMoney } from '../helpers/parse-money';
-import { RootState, updateAccount } from '../store';
-import { addTransaction } from '../store/transactions/actions';
-import { Account, Rates, Transaction } from '../types';
-import { DynamicInput } from './DynamicInput';
-import { Tabs } from './Tabs';
-import { createTransaction } from '../helpers/create-transaction';
-import { ConnectedTransactionsList } from './TransactionsList';
-import './Widget.css';
+import React from "react";
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+import { formatMoney } from "../helpers/format-money";
+import { getRates } from "../helpers/get-rates";
+import { isNumber } from "../helpers/is-number";
+import { parseMoney } from "../helpers/parse-money";
+import { RootState, updateAccount } from "../store";
+import { addTransaction } from "../store/transactions/actions";
+import { Account, Rates, Transaction } from "../types";
+import { DynamicInput } from "./DynamicInput";
+import { Tabs } from "./Tabs";
+import { createTransaction } from "../helpers/create-transaction";
+import { TransactionsList } from "./TransactionsList";
+import { SyncIcon } from "./SyncIcon";
+import { Status } from "../store/rates/types";
+import "./Widget.css";
 
 interface ConnectedProps {
   rates: Rates | null
+  status: Status
   accounts: Account[]
   transactions: Transaction[]
 }
@@ -116,19 +119,9 @@ export class Widget extends React.Component<Props, State> {
     }
 
     this.props.onAddTransaction(createTransaction(from, to, fromAccount, toAccount))
-
-    this.props.onUpdateAccount(fromAccount.id, {
-      balance: (fromAccount.balance - from)
-    })
-
-    this.props.onUpdateAccount(toAccount.id, {
-      balance: toAccount.balance + to
-    })
-
-    this.setState({
-      from: "",
-      to: ""
-    })
+    this.props.onUpdateAccount(fromAccount.id, { balance: (fromAccount.balance - from) })
+    this.props.onUpdateAccount(toAccount.id, { balance: toAccount.balance + to })
+    this.setState({ from: "", to: "" })
   }
 
   get rates() {
@@ -212,8 +205,8 @@ export class Widget extends React.Component<Props, State> {
       <div className="container">
         <div className="widget">
           <div className="account">
-            <div className="account-header">
-              <div className="account-title">Convert</div>
+            <div className="account-header" data-testid="from-account">
+              <div className="account-title">Exchange</div>
               <Tabs
                 items={tabItems}
                 selectedIndex={this.state.fromAccountIndex}
@@ -236,7 +229,7 @@ export class Widget extends React.Component<Props, State> {
             </div>
           </div>
 
-          <div className="account">
+          <div className="account" data-testid="to-account">
             <Tabs
               items={tabItems}
               selectedIndex={this.state.toAccountIndex}
@@ -259,7 +252,7 @@ export class Widget extends React.Component<Props, State> {
           </div>
         </div>
 
-        <ConnectedTransactionsList />
+        <TransactionsList transactions={this.props.transactions} />
       </div>
     );
   }
@@ -273,16 +266,26 @@ export class Widget extends React.Component<Props, State> {
       return null
     }
 
-    const from = formatMoney(Math.pow(10, fromAccount.precision), fromAccount.precision, fromAccount.currencySign)
-    const to = formatMoney(Math.floor(Math.pow(10, toAccount.precision) * rates), toAccount.precision, toAccount.currencySign)
+    const from = formatMoney(1 * Math.pow(10, fromAccount.precision), fromAccount.precision, fromAccount.currencySign)
+    const to = formatMoney(1 * Math.floor(Math.pow(10, toAccount.precision) * rates), toAccount.precision, toAccount.currencySign)
 
-    return `${from} = ${to}`
+    return (
+      <span className="current-rates">
+        {this.props.status === Status.Syncing && (
+          <span title="Update exchange rates" className="current-rates-icon">
+            <SyncIcon width={16} height={16} />
+            </span>
+        )}
+        <span>{`${from} = ${to}`}</span>
+      </span>
+    )
   }
 }
 
 function mapStateToProps(state: RootState): ConnectedProps {
   return {
     rates: state.rates.rates,
+    status: state.rates.status,
     accounts: state.accounts,
     transactions: state.transactions,
   }

@@ -1,32 +1,32 @@
-import React from 'react';
-import { Provider as ReactReduxProvider } from 'react-redux';
-import { API } from './servises/api/api';
-import { createStore, Store } from './store';
-import { Rates } from './servises/rates/rates';
-import { defaultAccounts } from './constants';
-import { ConnectedWidget } from './components/Widget';
-import './App.css';
+import React from "react";
+import { Provider as ReactReduxProvider } from "react-redux";
+import { OpenExchangeRates } from "./servises/open-exchange-rates/open-exchange-rates";
+import { createStore, Store } from "./store";
+import { RatesSync } from "./servises/rates-sync/rates-sync";
+import { defaultAccounts } from "./constants";
+import { ConnectedWidget } from "./components/Widget";
+import "./App.css";
 
 interface Props { }
 
 class App extends React.Component {
-  api: API
+  api: OpenExchangeRates
   store: Store
-  rates: Rates
+  ratesSync: RatesSync
 
   constructor(props: Props) {
     super(props)
-    this.api = new API()
+    this.api = new OpenExchangeRates()
     this.store = createStore({ accounts: defaultAccounts })
-    this.rates = new Rates(this.api, this.store)
+    this.ratesSync = new RatesSync(this.api, this.store)
   }
 
   componentDidMount() {
-    this.rates.syncRates()
+    this.ratesSync.startSync()
   }
 
   componentWillUnmount() {
-    this.rates.dispose()
+    this.ratesSync.stopSync()
   }
 
   render() {

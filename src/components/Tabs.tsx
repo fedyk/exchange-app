@@ -1,5 +1,5 @@
-import React from 'react';
-import './Tabs.css';
+import React from "react";
+import "./Tabs.css";
 
 interface Props {
   items: string[]
@@ -15,7 +15,7 @@ export function Tabs(props: Props) {
         const handleClick = () => props.onSelect(index)
 
         return (
-          <button key={index} className={className} onClick={handleClick}>{item}</button>
+          <button key={index} className={className} onClick={handleClick} data-role="tab-item">{item}</button>
         )
       })}
     </div>

@@ -1,5 +1,5 @@
-import { Account } from '../../types'
-import { ActionTypes, AccountsState, SET_ACCOUNTS, UPDATE_ACCOUNT } from './types'
+import { Account } from "../../types"
+import { ActionTypes, AccountsState, SET_ACCOUNTS, UPDATE_ACCOUNT } from "./types"
 
 const initialState: AccountsState = []
 

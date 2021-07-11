@@ -1,28 +1,29 @@
-import { APIInterface } from "../api/types";
+import { IOpenExchangeRates } from "../open-exchange-rates/types";
 import { Store, setRates, setRatesStatus } from "../../store";
 import { Status } from "../../store/rates/types";
 
-export class Rates {
-  api: APIInterface
+export class RatesSync {
+  api: IOpenExchangeRates
   store: Store
   timer?: number
   abort?: AbortController
   syncInterval: number
 
-  constructor(api: APIInterface, store: Store, syncInterval = 10 * 1000) {
+  constructor(api: IOpenExchangeRates, store: Store, syncInterval = 1 * 1000) {
     this.api = api
     this.store = store
     this.syncInterval = syncInterval
   }
 
-  dispose() {
+  stopSync() {
     this.abort?.abort()
     clearTimeout(this.timer)
   }
 
-  syncRates() {
+  startSync() {
     this.store.dispatch(setRatesStatus(Status.Syncing))
 
+    // cancel prev request
     if (this.abort) {
       this.abort.abort()
     }
@@ -33,16 +34,18 @@ export class Rates {
       .then(rates => {
         this.store.dispatch(setRates(rates))
         this.store.dispatch(setRatesStatus(Status.UpToDate))
-        this.scheduleSync()
       })
       .catch(err => {
         this.store.dispatch(setRatesStatus(Status.OutToDate))
       })
+      .finally(() => {
+        this.scheduleSync()
+      })
   }
 
   protected scheduleSync() {
-    // some typescript magic to force DOM typings for `setTimeout`
-    const callback: Function = () => this.syncRates()
+    // typescript magic to force DOM typings for `setTimeout`
+    const callback: Function = () => this.startSync()
 
     this.timer = setTimeout(callback, this.syncInterval)
   }
