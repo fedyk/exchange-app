@@ -9,7 +9,7 @@ export class RatesSync {
   abort?: AbortController
   syncInterval: number
 
-  constructor(api: IOpenExchangeRates, store: Store, syncInterval = 1 * 1000) {
+  constructor(api: IOpenExchangeRates, store: Store, syncInterval = 10 * 1000) {
     this.api = api
     this.store = store
     this.syncInterval = syncInterval
