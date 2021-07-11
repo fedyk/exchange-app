@@ -7,18 +7,17 @@ import { isNumber } from "../helpers/is-number";
 import { parseMoney } from "../helpers/parse-money";
 import { RootState, updateAccount } from "../store";
 import { addTransaction } from "../store/transactions/actions";
-import { Account, Rates, Transaction } from "../types";
+import { Account, Rates, Transaction, RatesStatus } from "../types";
 import { DynamicInput } from "./DynamicInput";
 import { Tabs } from "./Tabs";
 import { createTransaction } from "../helpers/create-transaction";
 import { TransactionsList } from "./TransactionsList";
 import { SyncIcon } from "./SyncIcon";
-import { Status } from "../store/rates/types";
 import "./Widget.css";
 
 interface ConnectedProps {
   rates: Rates | null
-  status: Status
+  status: RatesStatus
   accounts: Account[]
   transactions: Transaction[]
 }
@@ -217,6 +216,7 @@ export class Widget extends React.Component<Props, State> {
               <div className="input-box-body">
                 {this.from && <span className="exchange-direction">-</span>}
                 <DynamicInput
+                  name="from-input"
                   value={this.from}
                   onChange={this.handleFromChange}
                   onEnterKeyDown={this.handleExchange}
@@ -238,7 +238,13 @@ export class Widget extends React.Component<Props, State> {
             <div className="input-box" onClick={() => this.toInputRef.current?.focus()}>
               <div className="input-box-body">
                 {this.to && <span className="exchange-direction">+</span>}
-                <DynamicInput value={this.to} onChange={this.handleToChange} onEnterKeyDown={this.handleExchange} inputRef={this.toInputRef} />
+                <DynamicInput
+                  name="to-input"
+                  value={this.to}
+                  onChange={this.handleToChange}
+                  onEnterKeyDown={this.handleExchange}
+                  inputRef={this.toInputRef}
+                />
               </div>
               <div className="input-box-footer">
                 <div className="hint">{this.toAccount ? `You have ${formatMoney(this.toAccount.balance, this.toAccount.precision, this.toAccount.currencySign)}` : ""}</div>
@@ -248,7 +254,7 @@ export class Widget extends React.Component<Props, State> {
           </div>
 
           <div className="widget-footer">
-            <button className="primary-btn" disabled={this.isExchangeDisabled} onClick={this.handleExchange}>Exchange</button>
+            <button className="primary-btn" disabled={this.isExchangeDisabled} onClick={this.handleExchange} aria-label="exchange-button">Exchange</button>
           </div>
         </div>
 
@@ -271,10 +277,10 @@ export class Widget extends React.Component<Props, State> {
 
     return (
       <span className="current-rates">
-        {this.props.status === Status.Syncing && (
+        {this.props.status === RatesStatus.Syncing && (
           <span title="Update exchange rates" className="current-rates-icon">
             <SyncIcon width={16} height={16} />
-            </span>
+          </span>
         )}
         <span>{`${from} = ${to}`}</span>
       </span>

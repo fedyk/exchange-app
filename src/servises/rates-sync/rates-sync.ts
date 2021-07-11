@@ -1,6 +1,6 @@
 import { IOpenExchangeRates } from "../open-exchange-rates/types";
 import { Store, setRates, setRatesStatus } from "../../store";
-import { Status } from "../../store/rates/types";
+import { RatesStatus } from "../../types";
 
 export class RatesSync {
   api: IOpenExchangeRates
@@ -21,7 +21,7 @@ export class RatesSync {
   }
 
   startSync() {
-    this.store.dispatch(setRatesStatus(Status.Syncing))
+    this.store.dispatch(setRatesStatus(RatesStatus.Syncing))
 
     // cancel prev request
     if (this.abort) {
@@ -33,10 +33,10 @@ export class RatesSync {
     return this.api.fetchRates(this.abort.signal)
       .then(rates => {
         this.store.dispatch(setRates(rates))
-        this.store.dispatch(setRatesStatus(Status.UpToDate))
+        this.store.dispatch(setRatesStatus(RatesStatus.UpToDate))
       })
       .catch(err => {
-        this.store.dispatch(setRatesStatus(Status.OutToDate))
+        this.store.dispatch(setRatesStatus(RatesStatus.OutToDate))
       })
       .finally(() => {
         this.scheduleSync()

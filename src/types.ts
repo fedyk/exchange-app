@@ -3,6 +3,13 @@ export interface Rates {
   rates: Record<string, number>
 }
 
+export enum RatesStatus {
+  Unknown,
+  Syncing,
+  UpToDate,
+  OutToDate
+}
+
 export interface Account {
   id: number
   currency: string

@@ -1,13 +1,13 @@
-import { Rates } from "../../types"
+import { Rates, RatesStatus } from "../../types"
 import { ratesReducers } from "./reducer"
-import { Status, setRatesAction, SET_RATES, setRatesStatusAction, SET_RATES_STATUS } from "./types"
+import { setRatesAction, SET_RATES, setRatesStatusAction, SET_RATES_STATUS } from "./types"
 
 test("fxReducers should define initial state", () => {
   const action: any = { type: "$INITIAL" }
 
   expect(ratesReducers(undefined, action)).toEqual({
     rates: null,
-    status: Status.Unknown
+    status: RatesStatus.Unknown
   })
 })
 
@@ -28,8 +28,8 @@ test("fxReducers should set rates", () => {
 test("fxReducers should set rates status", () => {
   const action: setRatesStatusAction = {
     type: SET_RATES_STATUS,
-    payload: Status.Syncing,
+    payload: RatesStatus.Syncing,
   }
 
-  expect(ratesReducers(undefined, action)).toHaveProperty("status", Status.Syncing)
+  expect(ratesReducers(undefined, action)).toHaveProperty("status", RatesStatus.Syncing)
 })

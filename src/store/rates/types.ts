@@ -1,15 +1,8 @@
-import { Rates } from "../../types";
-
-export enum Status {
-  Unknown,
-  Syncing,
-  UpToDate,
-  OutToDate
-}
+import { Rates, RatesStatus } from "../../types";
 
 export type RatesState = {
   rates: Rates | null
-  status: Status 
+  status: RatesStatus 
 }
 
 export const SET_RATES = "SET_RATES";
@@ -22,7 +15,7 @@ export interface setRatesAction {
 
 export interface setRatesStatusAction {
   type: typeof SET_RATES_STATUS
-  payload: Status
+  payload: RatesStatus
 }
 
 export type ActionTypes = setRatesAction | setRatesStatusAction

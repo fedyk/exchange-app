@@ -1,5 +1,5 @@
-import { Rates } from "../../types"
-import { ActionTypes, Status, SET_RATES, SET_RATES_STATUS } from "./types"
+import { Rates, RatesStatus } from "../../types"
+import { ActionTypes, SET_RATES, SET_RATES_STATUS } from "./types"
 
 export function setRates(rates: Rates): ActionTypes {
   return {
@@ -8,7 +8,7 @@ export function setRates(rates: Rates): ActionTypes {
   }
 }
 
-export function setRatesStatus(status: Status): ActionTypes {
+export function setRatesStatus(status: RatesStatus): ActionTypes {
   return {
     type: SET_RATES_STATUS,
     payload: status

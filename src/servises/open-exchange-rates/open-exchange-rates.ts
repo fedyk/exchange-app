@@ -13,18 +13,6 @@ export class OpenExchangeRates implements IOpenExchangeRates {
   }
 
   fetchRates(signal?: AbortSignal): Promise<Rates> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          base: "USD",
-          rates: {
-            EUR: 0.842857,
-            GBP: 0.722836
-          }
-        })
-      }, 1000)
-    })
-
     const url = "https://openexchangerates.org/api/latest.json?app_id=487ba03c696b415ab481a430e1f731bc&symbols=EUR,GBP"
 
     return this.httpProvider(url, { signal: signal })

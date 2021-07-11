@@ -1,8 +1,9 @@
-import { ActionTypes, RatesState, Status, SET_RATES, SET_RATES_STATUS } from "./types"
+import { RatesStatus } from "../../types"
+import { ActionTypes, RatesState, SET_RATES, SET_RATES_STATUS } from "./types"
 
 const initialState: RatesState = {
   rates: null,
-  status: Status.Unknown,
+  status: RatesStatus.Unknown,
 }
 
 export function ratesReducers(state = initialState, action: ActionTypes): RatesState {

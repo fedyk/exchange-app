@@ -3,8 +3,9 @@ import { Provider as ReactReduxProvider } from "react-redux";
 import { OpenExchangeRates } from "./servises/open-exchange-rates/open-exchange-rates";
 import { createStore, Store } from "./store";
 import { RatesSync } from "./servises/rates-sync/rates-sync";
-import { defaultAccounts } from "./constants";
+import { defaultAccounts, fallbackRates } from "./constants";
 import { ConnectedWidget } from "./components/Widget";
+import { RatesStatus } from "./types";
 import "./App.css";
 
 interface Props { }
@@ -17,7 +18,13 @@ class App extends React.Component {
   constructor(props: Props) {
     super(props)
     this.api = new OpenExchangeRates()
-    this.store = createStore({ accounts: defaultAccounts })
+    this.store = createStore({
+      accounts: defaultAccounts,
+      rates: {
+        rates: fallbackRates, // openexchangerates limits can be excosted, have a defaul fallback will improve demo experience
+        status: RatesStatus.Unknown,
+      }
+    })
     this.ratesSync = new RatesSync(this.api, this.store)
   }
 

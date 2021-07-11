@@ -2,6 +2,7 @@ import React from "react";
 import "./DynamicInput.css";
 
 interface Props {
+  name: string
   value: string
   inputRef?: React.RefObject<HTMLInputElement>
   autoFocus?: boolean
@@ -25,7 +26,18 @@ export function DynamicInput(props: Props) {
   return (
     <div className="dynamic-input">
       <span className="dynamic-input-space-keeper">{props.value}</span>
-      <input type="text" className="dynamic-input-control" value={props.value} onKeyDown={handleKeyDown} onChange={handleChange} maxLength={10} ref={props.inputRef} autoFocus={props.autoFocus} />
+      <input
+        type="text"
+        className="dynamic-input-control"
+        name={props.name}
+        value={props.value}
+        onKeyDown={handleKeyDown}
+        onChange={handleChange}
+        maxLength={10}
+        ref={props.inputRef}
+        autoFocus={props.autoFocus}
+        aria-label={props.name}
+      />
     </div>
   )
 }
